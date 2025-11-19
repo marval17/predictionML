@@ -1,164 +1,128 @@
-PredictionML
-NBA Game Prediction Platform — Cloud-Native Architecture
+orm
 
-PredictionML is a cloud-native machine learning platform that predicts NBA game outcomes using historical and real-time data. The system is built using modern DevOps, MLOps, and cloud engineering practices, including Kubernetes, Terraform, AWS EKS, GitOps, Docker, Prometheus, and Grafana.
+End-to-end cloud-native machine learning platform that ingests NBA data, trains predictive models, deploys microservices on Kubernetes (EKS), and provides a real-time prediction API and web frontend. All infrastructure is automated using Terraform, GitOps via ArgoCD, and monitored with Prometheus + Grafana.
 
-This repository contains both the application code and the infrastructure-as-code definitions needed to deploy the entire stack.
+pgsql
+Copy code
+┌────────────┐
+│   INGEST   │ → Automated NBA data collection (API → S3 → RDS)
+└──────┬─────┘
+       │
+┌──────▼──────┐
+│   TRAINING   │ → Nightly ML model jobs on Kubernetes
+└──────┬──────┘
+       │
+┌──────▼─────────┐
+│   PREDICT API   │ → Real-time inference microservice
+└──────┬─────────┘
+       │
+┌──────▼──────────────┐
+│     FRONTEND APP     │ → User-facing prediction dashboard
+└──────┬──────────────┘
+       │
+┌──────▼─────────────┐
+│ PROMETHEUS/GRAFANA │ → Metrics, dashboards, alerts
+└────────────────────┘
+Repository Layout
+Path	Description
+terraform/	Terraform configs for VPC, subnets, NAT gateway, EKS cluster, node groups, RDS database, and ECR repos.
+services/	All microservices: prediction-api, data-service, ML training jobs, and frontend.
+k8s/	Kubernetes manifests for Deployments, Services, Ingress, Secrets, CronJobs, and ConfigMaps.
+argo/	GitOps application definitions for ArgoCD auto-sync.
+monitoring/	Prometheus + Grafana dashboards, scraping rules, alerting config.
+docker/	Dockerfiles for all microservices.
+.github/workflows/	CI pipelines for lint, build, test, Docker build/push, and GitOps sync.
 
-1. Overview
+Workflow
+Ingest Data
 
-PredictionML provides:
+Pull NBA stats from a public API
 
-Automated ingestion of NBA data
+Store raw data in S3
 
-Nightly machine learning model training
+Write structured data to PostgreSQL (RDS)
 
-Real-time inference through a prediction API
+Train ML Model
 
-A user-facing web frontend
+Nightly Kubernetes CronJob
 
-Fully automated CI/CD using GitHub Actions and ArgoCD
+Generates updated model artifacts
 
-Monitoring and alerting via Prometheus and Grafana
+Pushes model to S3 or a model registry
 
-All infrastructure provisioned through Terraform
+Deploy Microservices
 
-This project demonstrates real-world, production-grade DevOps and MLOps engineering.
+Prediction API
 
-2. Architecture Summary
+Data API
 
-The platform is composed of four core layers:
+Frontend web application
 
-Infrastructure (Terraform + AWS)
+Automatically deployed to EKS via ArgoCD
 
-VPC with public and private subnets
+Monitor Everything
 
-NAT Gateway
+Prometheus scrapes cluster + app metrics
 
-EKS cluster and managed node groups
+Grafana dashboards visualize predictions, latency, cluster health
 
-RDS PostgreSQL database
+Alerts can be configured via Alertmanager
 
-ECR registries for all microservices
+Getting Started
+Provision Infrastructure
 
-IAM roles and OIDC integration
+Requires Terraform 1.6+ and AWS credentials
 
-Application Layer (Kubernetes on EKS)
-
-prediction-api — ML inference service
-
-data-service — ETL + ingestion jobs
-
-ml-jobs — scheduled model training
-
-frontend — web UI
-
-Ingress controller for routing
-
-ArgoCD for GitOps-based deployments
-
-Machine Learning
-
-ETL pipeline loads NBA datasets into RDS
-
-Nightly training job produces a model artifact
-
-Inference service loads the latest model for predictions
-
-Monitoring + Observability
-
-Prometheus for metrics collection
-
-Grafana for dashboards
-
-Metrics include API performance, model latency, job status, and cluster health
-
-3. Microservices
-frontend
-
-Web application that visualizes predictions and matchup insights.
-
-prediction-api
-
-REST API serving real-time win probability predictions using the latest ML model.
-
-data-service
-
-Collects NBA data from public sources and updates the database.
-
-ml-jobs
-
-Kubernetes CronJob that trains new models on a schedule and stores the updated artifacts.
-
-4. CI/CD Pipeline
-Continuous Integration — GitHub Actions
-
-Builds Docker images
-
-Runs automated tests
-
-Pushes images to AWS ECR
-
-Updates Kubernetes manifests
-
-Continuous Deployment — ArgoCD
-
-Watches the GitOps repo
-
-Syncs changes to EKS
-
-Manages rollouts, rollbacks, and version history
-
-This ensures a fully automated, declarative deployment workflow.
-
-5. Infrastructure Deployment
-
-All cloud resources are defined using Terraform.
-
-Deploy infrastructure:
+bash
+Copy code
+cd terraform/
 terraform init
 terraform apply -var-file="env.tfvars"
+Build & Push Docker Images
 
-Connect to EKS:
-aws eks update-kubeconfig --name predictionml-eks --region us-east-1
-kubectl get nodes
+bash
+Copy code
+docker build -t prediction-api ./services/prediction-api
+docker push <ECR_URL>/prediction-api
+Deploy Kubernetes Resources
 
+bash
+Copy code
+kubectl apply -f k8s/
+Enable GitOps with ArgoCD
 
-After the cluster is established, ArgoCD synchronizes application manifests automatically.
+Install ArgoCD in the cluster
 
-6. Project Structure (high-level)
-predictionML/
-├── terraform/           # Infrastructure as Code
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── outputs.tf
-│   └── env.tfvars
-├── kubernetes/          # Manifests and GitOps config
-├── services/
-│   ├── prediction-api/
-│   ├── data-service/
-│   ├── ml-jobs/
-│   └── frontend/
-└── README.md
+Connect repo
 
-7. Purpose
+Watch auto-sync deployments
 
-PredictionML is designed as a portfolio-grade demonstration of:
+Launch Monitoring Stack
 
-Cloud-native architecture
+bash
+Copy code
+cd monitoring/
+kubectl apply -f prometheus/
+kubectl apply -f grafana/
+Roadmap
+ VPC, subnets, NAT, and networking foundation
 
-Kubernetes operations
+ EKS cluster with managed node groups
 
-Terraform-based infrastructure provisioning
+ RDS PostgreSQL instance
 
-GitOps and CI/CD automation
+ ECR repos for all microservices
 
-Machine learning deployment pipelines
+ Data ingestion pipeline
 
-Monitoring, observability, and production readiness
+ ML model training CronJob
 
-This project reflects industry-standard engineering best practices.
+ Real-time prediction API
 
-8. Status
+ Frontend dashboard
 
-This project is actively evolving. Additional features, datasets, dashboards, and model improvements are planned.
+ Full GitOps delivery with ArgoCD
+
+ Prometheus & Grafana monitoring dashboards
+
+ Production hardening (IAM boundaries, SSL, rate limits)
