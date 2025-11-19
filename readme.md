@@ -1,166 +1,164 @@
-🏀 PredictionML
-NBA Game Outcome Prediction Platform — Cloud-Native, ML-Driven, Fully Automated
+PredictionML
+NBA Game Prediction Platform — Cloud-Native Architecture
 
-PredictionML is a cloud-native machine learning platform that collects NBA statistics, trains predictive models, and serves real-time matchup predictions through a modern web interface.
-The system is fully containerized, deployed on Kubernetes (EKS), and managed using GitOps and Infrastructure as Code.
+PredictionML is a cloud-native machine learning platform that predicts NBA game outcomes using historical and real-time data. The system is built using modern DevOps, MLOps, and cloud engineering practices, including Kubernetes, Terraform, AWS EKS, GitOps, Docker, Prometheus, and Grafana.
 
-This project demonstrates real DevOps, MLOps, cloud engineering, and ML deployment at production scale.
+This repository contains both the application code and the infrastructure-as-code definitions needed to deploy the entire stack.
 
-🚀 Overview
+1. Overview
 
-PredictionML uses a microservices architecture running on AWS EKS to deliver end-to-end NBA matchup predictions.
-The core features include:
+PredictionML provides:
 
-Automated data ingestion from NBA API sources
+Automated ingestion of NBA data
 
 Nightly machine learning model training
 
-Live prediction API endpoint
+Real-time inference through a prediction API
 
-Web-based frontend for users
+A user-facing web frontend
 
-Fully automated CI/CD pipeline
+Fully automated CI/CD using GitHub Actions and ArgoCD
 
-Real-time monitoring with Prometheus and Grafana
+Monitoring and alerting via Prometheus and Grafana
 
-Infrastructure created entirely with Terraform
+All infrastructure provisioned through Terraform
 
-🧠 System Architecture
-The platform includes:
-Infrastructure Layer (Terraform)
+This project demonstrates real-world, production-grade DevOps and MLOps engineering.
 
-AWS VPC
+2. Architecture Summary
 
-Public + private subnets
+The platform is composed of four core layers:
 
-NAT gateway
+Infrastructure (Terraform + AWS)
 
-EKS cluster + node groups
+VPC with public and private subnets
+
+NAT Gateway
+
+EKS cluster and managed node groups
 
 RDS PostgreSQL database
 
-ECR registries
+ECR registries for all microservices
 
-IAM roles & security groups
+IAM roles and OIDC integration
 
-Application Layer (Kubernetes)
+Application Layer (Kubernetes on EKS)
 
-frontend – Web UI
+prediction-api — ML inference service
 
-prediction-api – ML inference
+data-service — ETL + ingestion jobs
 
-data-service – ETL/ingestion
+ml-jobs — scheduled model training
 
-ml-jobs – scheduled training tasks
+frontend — web UI
 
-Ingress controller
+Ingress controller for routing
 
-ArgoCD for GitOps
+ArgoCD for GitOps-based deployments
 
-Prometheus + Grafana monitoring
+Machine Learning
 
-This design follows cloud-native best practices and mirrors real-world production environments.
+ETL pipeline loads NBA datasets into RDS
 
-🧩 Microservices
-🔹 frontend
+Nightly training job produces a model artifact
 
-Interactive web app where users explore NBA predictions.
+Inference service loads the latest model for predictions
 
-🔹 prediction-api
+Monitoring + Observability
 
-Serves ML-powered predictions based on the latest trained model.
+Prometheus for metrics collection
 
-🔹 data-service
+Grafana for dashboards
 
-Collects NBA game and player statistics and loads them into an RDS Postgres database.
+Metrics include API performance, model latency, job status, and cluster health
 
-🔹 ml-jobs
+3. Microservices
+frontend
 
-Nightly Kubernetes CronJob that retrains the model and updates the artifact used by the API.
+Web application that visualizes predictions and matchup insights.
 
-🔁 Data Flow
+prediction-api
 
-Data ingestion: NBA stats → ETL → RDS
+REST API serving real-time win probability predictions using the latest ML model.
 
-Training: CronJob trains updated ML model
+data-service
 
-Inference: API loads model and returns predictions
+Collects NBA data from public sources and updates the database.
 
-UI: Frontend displays win probabilities and game insights
+ml-jobs
 
-☁️ Infrastructure Overview
+Kubernetes CronJob that trains new models on a schedule and stores the updated artifacts.
 
-All cloud resources are defined using Terraform, making the environment:
-
-Reproducible
-
-Version-controlled
-
-Fully automated
-
-Terraform provisions:
-
-VPC networking
-
-EKS + node groups
-
-RDS Postgres database
-
-ECR registries
-
-IAM + OIDC
-
-Private/public subnets
-
-This forms a production-ready architecture.
-
-🔧 CI/CD Pipeline
-
-PredictionML uses a fully automated pipeline:
-
-CI — GitHub Actions
+4. CI/CD Pipeline
+Continuous Integration — GitHub Actions
 
 Builds Docker images
 
-Runs unit tests
+Runs automated tests
 
 Pushes images to AWS ECR
 
 Updates Kubernetes manifests
 
-CD — ArgoCD
+Continuous Deployment — ArgoCD
 
-Watches GitOps configuration repo
+Watches the GitOps repo
 
-Auto-syncs changes into EKS
+Syncs changes to EKS
 
-Handles rolling deployments
+Manages rollouts, rollbacks, and version history
 
-Provides rollback capability
+This ensures a fully automated, declarative deployment workflow.
 
-This ensures consistent, zero-downtime deployments.
+5. Infrastructure Deployment
 
-📈 Monitoring & Observability
-Prometheus
+All cloud resources are defined using Terraform.
 
-Scrapes cluster + service metrics
+Deploy infrastructure:
+terraform init
+terraform apply -var-file="env.tfvars"
 
-Collects API latency, model inference metrics, ETL metrics
+Connect to EKS:
+aws eks update-kubeconfig --name predictionml-eks --region us-east-1
+kubectl get nodes
 
-Tracks CronJob duration
 
-Grafana
+After the cluster is established, ArgoCD synchronizes application manifests automatically.
 
-Dashboards include:
+6. Project Structure (high-level)
+predictionML/
+├── terraform/           # Infrastructure as Code
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   └── env.tfvars
+├── kubernetes/          # Manifests and GitOps config
+├── services/
+│   ├── prediction-api/
+│   ├── data-service/
+│   ├── ml-jobs/
+│   └── frontend/
+└── README.md
 
-Cluster health
+7. Purpose
 
-Pod CPU/Mem
+PredictionML is designed as a portfolio-grade demonstration of:
 
-API performance
+Cloud-native architecture
 
-ML accuracy / latency
+Kubernetes operations
 
-Database performance
+Terraform-based infrastructure provisioning
 
-This gives real-time insight into system performance.
+GitOps and CI/CD automation
+
+Machine learning deployment pipelines
+
+Monitoring, observability, and production readiness
+
+This project reflects industry-standard engineering best practices.
+
+8. Status
+
+This project is actively evolving. Additional features, datasets, dashboards, and model improvements are planned.
