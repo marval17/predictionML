@@ -1,128 +1,155 @@
-orm
+# PredictionML — NBA Game Prediction Platform
 
-End-to-end cloud-native machine learning platform that ingests NBA data, trains predictive models, deploys microservices on Kubernetes (EKS), and provides a real-time prediction API and web frontend. All infrastructure is automated using Terraform, GitOps via ArgoCD, and monitored with Prometheus + Grafana.
+End-to-end cloud-native machine learning platform that ingests NBA data, trains predictive models, deploys microservices on Amazon EKS, and exposes a real-time prediction API and web dashboard. Infrastructure is fully automated using Terraform, GitOps with ArgoCD, and monitored using Prometheus + Grafana.
 
-pgsql
-Copy code
 ┌────────────┐
 │   INGEST   │ → Automated NBA data collection (API → S3 → RDS)
 └──────┬─────┘
        │
 ┌──────▼──────┐
-│   TRAINING   │ → Nightly ML model jobs on Kubernetes
+│  TRAINING    │ → Nightly ML training jobs (Kubernetes CronJobs)
 └──────┬──────┘
        │
 ┌──────▼─────────┐
-│   PREDICT API   │ → Real-time inference microservice
+│  PREDICT API    │ → Real-time inference microservice
 └──────┬─────────┘
        │
 ┌──────▼──────────────┐
-│     FRONTEND APP     │ → User-facing prediction dashboard
+│   FRONTEND APP       │ → User-facing prediction dashboard
 └──────┬──────────────┘
        │
-┌──────▼─────────────┐
-│ PROMETHEUS/GRAFANA │ → Metrics, dashboards, alerts
-└────────────────────┘
-Repository Layout
+┌──────▼──────────────┐
+│ PROMETHEUS/GRAFANA  │ → Metrics, dashboards, alerts
+└─────────────────────┘
+
+📁 Repository Layout
 Path	Description
-terraform/	Terraform configs for VPC, subnets, NAT gateway, EKS cluster, node groups, RDS database, and ECR repos.
-services/	All microservices: prediction-api, data-service, ML training jobs, and frontend.
-k8s/	Kubernetes manifests for Deployments, Services, Ingress, Secrets, CronJobs, and ConfigMaps.
-argo/	GitOps application definitions for ArgoCD auto-sync.
-monitoring/	Prometheus + Grafana dashboards, scraping rules, alerting config.
-docker/	Dockerfiles for all microservices.
-.github/workflows/	CI pipelines for lint, build, test, Docker build/push, and GitOps sync.
+terraform/	Terraform IaC for VPC, subnets, NAT gateway, EKS cluster, node groups, RDS, ECR.
+services/	Prediction API, Data API, ML training jobs, and frontend microservices.
+k8s/	Kubernetes manifests for Deployments, Services, Ingress, CronJobs, Secrets, ConfigMaps.
+argo/	ArgoCD GitOps Application definitions for auto-sync deployments.
+monitoring/	Prometheus + Grafana dashboards, scrape configs, alerting rules.
+docker/	All Dockerfiles for the platform.
+.github/workflows/	CI pipelines for build, lint, test, Docker push, and image validation.
 
-Workflow
-Ingest Data
+🔄 Workflow
+1. Ingest Data
 
-Pull NBA stats from a public API
+Pull NBA game & player stats from a public API
 
 Store raw data in S3
 
 Write structured data to PostgreSQL (RDS)
 
-Train ML Model
+2. Train Machine Learning Model
 
 Nightly Kubernetes CronJob
 
 Generates updated model artifacts
 
-Pushes model to S3 or a model registry
+Stores model in S3 or a model registry
 
-Deploy Microservices
+3. Deploy Microservices
 
 Prediction API
 
 Data API
 
-Frontend web application
+Frontend dashboard
 
-Automatically deployed to EKS via ArgoCD
+Automated rollout via ArgoCD GitOps
 
-Monitor Everything
+4. Monitor the Platform
 
-Prometheus scrapes cluster + app metrics
+Prometheus scrapes system + app metrics
 
-Grafana dashboards visualize predictions, latency, cluster health
+Grafana visualizes dashboards for cluster, APIs, and prediction performance
 
 Alerts can be configured via Alertmanager
 
-Getting Started
-Provision Infrastructure
+🚀 Getting Started
+1. Deploy Infrastructure
 
-Requires Terraform 1.6+ and AWS credentials
+Requires Terraform 1.6+ and AWS credentials.
 
-bash
-Copy code
 cd terraform/
 terraform init
 terraform apply -var-file="env.tfvars"
-Build & Push Docker Images
 
-bash
-Copy code
+
+This provisions:
+
+VPC, routes, subnets
+
+NAT Gateway
+
+Amazon EKS
+
+RDS PostgreSQL
+
+ECR repositories
+
+2. Build and Push Docker Images
 docker build -t prediction-api ./services/prediction-api
 docker push <ECR_URL>/prediction-api
-Deploy Kubernetes Resources
 
-bash
-Copy code
+
+Repeat for:
+
+data-service
+
+ml-jobs
+
+frontend
+
+3. Apply Kubernetes Manifests
 kubectl apply -f k8s/
-Enable GitOps with ArgoCD
 
-Install ArgoCD in the cluster
+4. Enable GitOps with ArgoCD
 
-Connect repo
+Install ArgoCD
 
-Watch auto-sync deployments
+Connect GitHub repo
 
-Launch Monitoring Stack
+Enable auto-sync
 
-bash
-Copy code
-cd monitoring/
-kubectl apply -f prometheus/
-kubectl apply -f grafana/
-Roadmap
- VPC, subnets, NAT, and networking foundation
+Your cluster will now auto-deploy on every git push.
 
- EKS cluster with managed node groups
+5. Launch Monitoring Stack
+kubectl apply -f monitoring/prometheus/
+kubectl apply -f monitoring/grafana/
 
- RDS PostgreSQL instance
 
- ECR repos for all microservices
+Grafana dashboards include:
 
- Data ingestion pipeline
+EKS node metrics
 
- ML model training CronJob
+API latency & throughput
+
+Model prediction frequency
+
+CronJob training summaries
+
+🗺️ Roadmap
+
+ VPC networking + NAT + routing
+
+ EKS cluster & node groups
+
+ RDS PostgreSQL
+
+ ECR repositories
+
+ NBA ingestion pipeline
+
+ ML model training workflow
 
  Real-time prediction API
 
- Frontend dashboard
+ Frontend prediction dashboard
 
- Full GitOps delivery with ArgoCD
+ Full GitOps deployment via ArgoCD
 
- Prometheus & Grafana monitoring dashboards
+ Prometheus/Grafana dashboards
 
- Production hardening (IAM boundaries, SSL, rate limits)
+ Production hardening (IAM, SSL, rate limits)
